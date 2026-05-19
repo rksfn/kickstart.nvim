@@ -95,6 +95,7 @@ return {
       ensure_installed = {
         -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
+        'js-debug-adapter',
       },
     }
 
@@ -144,5 +145,39 @@ return {
         detached = vim.fn.has 'win32' == 0,
       },
     }
+
+    dap.adapters['pwa-node'] = {
+      type = 'server',
+      host = 'localhost',
+      port = '${port}',
+      executable = {
+        command = 'js-debug-adapter',
+        args = { '${port}' },
+      },
+    }
+
+    for _, language in ipairs { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' } do
+      dap.configurations[language] = {
+        {
+          type = 'pwa-node',
+          request = 'launch',
+          name = 'Launch current file',
+          program = '${file}',
+          cwd = '${workspaceFolder}',
+          sourceMaps = true,
+          skipFiles = { '<node_internals>/**' },
+          console = 'integratedTerminal', -- Optional: shows output in a Neovim terminal
+        },
+        {
+          type = 'pwa-node',
+          request = 'attach',
+          name = 'Attach to existing Node process',
+          processId = require('dap.utils').pick_process,
+          cwd = '${workspaceFolder}',
+          sourceMaps = true,
+          skipFiles = { '<node_internals>/**' },
+        },
+      }
+    end
   end,
 }
